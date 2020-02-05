@@ -1,0 +1,23 @@
+{
+  "name": "6502-suite",
+  "version": "1.0.0",
+  "description": "Assembler, disassember and emulator for 6502 CPU",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "keywords": [
+    "6502",
+    "assembler",
+    "disassembler",
+    "emulator"
+  ],
+  "author": "JM Gustafson",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/jasmine": "^3.5.1",
+    "@types/node": "^13.1.8",
+    "jasmine": "^3.5.0"
+  },
+  "dependencies": {}
+}
