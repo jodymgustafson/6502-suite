@@ -10,6 +10,8 @@ export class Emulator
     private stopOnBreaK = true;
     private isRunning = false;
     private msPerCycle: number;
+    private cyclesPerBatch: number;
+
     private onStepCallback: (result: ExecutionResult) => any;
     private onStopCallback: (reason: StopReason) => any;
 
@@ -17,8 +19,10 @@ export class Emulator
     get memory(): number[] { return this.cpu.memory; }
     get totalCycles(): number { return this.cpu.processorCycles; }
 
-    constructor(private cyclesPerSecond = 25) {
-        this.msPerCycle = Math.floor(1000 / this.cyclesPerSecond);
+    constructor(private cyclesPerSecond = 1000000) {
+        this.msPerCycle = 1000 / this.cyclesPerSecond;
+        // Set the batch size such that each one will run ~10ms
+        this.cyclesPerBatch = Math.floor(this.cyclesPerSecond / 100);
         this.reset(true);
     }
 
@@ -83,7 +87,7 @@ export class Emulator
     run(stopOnBreak = true): Emulator {
         this.stopExec = false;
         this.stopOnBreaK = stopOnBreak;
-        this.execNext();
+        this.execBatch();
         return this;
     }
 
@@ -114,21 +118,32 @@ export class Emulator
         return lower + (upper << 8);
     }
 
-    private execNext(): void {
-        if (this.stopExec) return this.fireOnStop("user");
+    private execBatch(): void {
+        let cycles = 0;
+        let time = Date.now();
 
-        const state = this.cpu.executeNext();
-        if (state.isBreak && this.stopOnBreaK) {
-            return this.fireOnStop("break");
+        do {
+            const result = this.cpu.executeNext();
+            if (result.isBreak && this.stopOnBreaK) {
+                return this.fireOnStop("break");
+            }
+            if (this.onStepCallback) {
+                this.onStepCallback(result);
+            }
+            
+            cycles += result.cycles;
         }
-        
-        if (this.stopExec) return this.fireOnStop("user");
-        
-        setTimeout(() => this.execNext(), this.msPerCycle * state.cycles);
+        while (!this.stopExec && cycles < this.cyclesPerBatch);
 
-        if (this.onStepCallback) {
-            this.onStepCallback(state);
+        if (this.stopExec) {
+            return this.fireOnStop("user");
         }
+
+        const elapsed = Date.now() - time;
+        const expected = cycles * this.msPerCycle;
+        const wait = Math.floor(Math.max(0, expected - elapsed));
+        //console.log(elapsed, expected, wait);
+        setTimeout(() => this.execBatch(), wait);
     }
 
     private fireOnStop(reason: StopReason): void {

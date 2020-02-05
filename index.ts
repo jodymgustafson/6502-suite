@@ -1,11 +1,16 @@
 const code1 = `
-LDA #$01
-STA $0200
-LDX #$05
-STX $0201
-LDY #$08
-STY $0202`
-;
+  LDY #$00
+start:
+  LDX #$00
+start_x:
+  INX
+  CPX #$FF
+  BNE start_x
+  INY
+  CPY #$FF
+  BNE start_x
+  BRK
+`;
 
 import {parseCode, assemble} from "./src/assembler/asm6502";
 import { byteArrayToHexString, parseNumber, hexStringToByteArray } from "./src/util";
@@ -22,8 +27,14 @@ import { Emulator } from "./src/emulator/emu6502";
 
 const emu = new Emulator();
 const bytes = assemble(code1);
-emu.load(bytes, 0x0100);
-console.log(emu.getWordAt(0x0103));
-emu.onStep(state => console.log(state));
-emu.onStop(reason => console.log(reason));
+emu.load(bytes);
+//emu.onStep(state => console.log(emu.totalCycles,emu.registers.x));
+emu.onStop(reason => {
+    console.log(reason);
+    console.log(emu.totalCycles)
+    const elapsed = Date.now() - start;
+    console.log("time", elapsed, emu.totalCycles / elapsed * 1000);
+});
+const start = Date.now();
+console.log("start");
 emu.run();

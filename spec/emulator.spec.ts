@@ -80,9 +80,9 @@ describe("When emulating code with step", () => {
         expect(em.totalCycles).toBe(25);
         checkRegisters(em, 1, 5, 8, 0, 0xfc, 0x34);
 
-        expect(em.memory[0x0200]).toBe(1);
-        expect(em.memory[0x0201]).toBe(5);
-        expect(em.memory[0x0202]).toBe(8);
+        expect(em.getByteAt(0x0200)).toBe(1);
+        expect(em.getByteAt(0x0201)).toBe(5);
+        expect(em.getByteAt(0x0202)).toBe(8);
     });
 });
 
