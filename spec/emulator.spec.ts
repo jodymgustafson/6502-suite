@@ -10,11 +10,27 @@ STX $0201
 LDY #$08
 STY $0202`;
 
+describe("When load bytes", () => {
+    it("should put the bytes in memory at default location", () => {
+        const bytes = assemble(code2);
+        const em = new Emulator();
+        em.load(bytes);
+        expect(em.getByteAt(0)).toBe(0xA9);
+        expect(em.getByteAt(1)).toBe(0x01);
+    });
+    it("should put the bytes in memory at specific location", () => {
+        const bytes = assemble(code2);
+        const em = new Emulator();
+        em.load(bytes, 0x0100);
+        expect(em.getWordAt(0x0103)).toBe(0x0200);
+    });
+});
+
 describe("When emulating code with step", () => {
     it("should step through instructions", () => {
         const bytes = assemble(code2);
         const em = new Emulator();
-        em.memory.push(...bytes);
+        em.load(bytes);
 
         checkNextInstruction(em.getNextInstruction(), 0, [0xA9, 0x01], "LDA #$01");
 

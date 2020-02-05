@@ -22,8 +22,8 @@ import { Emulator } from "./src/emulator/emu6502";
 
 const emu = new Emulator();
 const bytes = assemble(code1);
-emu.memory.push(...bytes);
-console.log(emu.memory.length);
+emu.load(bytes, 0x0100);
+console.log(emu.getWordAt(0x0103));
 emu.onStep(state => console.log(state));
 emu.onStop(reason => console.log(reason));
 emu.run();

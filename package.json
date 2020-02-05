@@ -6,6 +6,7 @@
   "scripts": {
     "test": "test"
   },
+  "repository": "https://github.com/jodymgustafson/6502-suite",
   "keywords": [
     "6502",
     "assembler",

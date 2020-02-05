@@ -742,7 +742,7 @@ export const Cpu6502 = function() {
 
 	let processorCycles: number;
 
-	function executeNext(): ExecutionState {
+	function executeNext(): ExecutionResult {
 		breakFlag = false;
 		const instructCode = ImmediateByte();
 
@@ -801,7 +801,7 @@ export const Cpu6502 = function() {
 	};
 }
 
-export type ExecutionState = {
+export type ExecutionResult = {
 	/** Will be true if the last instruction was a break */
 	isBreak: boolean;
 	/** Number of cycles the last instruction used */

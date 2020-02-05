@@ -1,6 +1,111 @@
 # 6502 Suite
 A suite of tools for assembling, disassembling and emulating 6502 microprocessor machine code.
 
+## Assembler
+The assembler takes a string of assembly code and turns it into an array of machine code bytes.
+
+`assemble(code: string): number[]`
+
+### Example:
+
+```javascript
+const code = `
+  LDA #$F1
+  STA $0600
+`;
+const bytes = assemble(code); //=> [0xA9, 0xF1, 0x8D, 0x00, 0x06]
+```
+
+## Disassembler
+The disassembler takes an array of bytes and turns it into an array of disassembled instructions.
+
+`disassemble(bytes: number[], baseAddr?: number, startAddr?: number, stopAddr?: number): DisassembledInstruction[]`
+
+### Optional Params:
+- baseAddr - Address of the first byte in memory (for computing relative addressing), default is 0
+- startAddr - Address to start disassembly at, default is baseAddr
+- stopAddr - Address to stop at, default is undefined
+
+### Return Type:
+```javascript
+{
+    /** Address the instruction starts */
+    address: number,
+    /** Number of bytes for the instruction */
+    bytes: number[],
+    /** The assembly instruction */
+    assembly: string;
+}
+```
+
+### Example:
+```javascript
+const result = disassemble([0xA9, 0xF1, 0x8D, 0x00, 0x06]);
+result[0]; //=> { address: 0, bytes: [0xA9, 0xF1], assembly: 'LDA #$F1' }
+result[1]; //=> { address: 2, bytes: [0x8D, 0x00, 0x06], assembly: 'STA $0600' } 
+```
+
+## Emulator
+The emulator is an object takes an array of machine code bytes and executes them.
+
+```javascript
+const em = new Emulator();
+em.load(bytes);
+em.run();
+```
+
+### Constructor
+The constructor can take an optional paramater for the cycles per second.
+
+`constructor(cyclesPerSec?: number)`
+
+### load()
+Use the load method to load bytes into memory.
+The optional startAddr parameters tells it where in memory to put the bytes. If not defined it will start at zero.
+
+`load(bytes: number[], startAddr?: number)`
+
+### run()
+Starts running the processor until it hits a break statement. Takes an optional parameter to tell it not to stop on break.
+
+`run(stopOnBreak?: boolean)`
+
+### step()
+Executes only the next instruction at the current program counter and returns the result of the execution.
+
+`step(): ExecutionResult`
+
+ExecutionResult is an object with the following fields:
+- isBreak - Will be true if the instruction was a break
+- cycles - Number of cycles the last instruction used
+
+### halt()
+Stops execution after the current instruction finishes.
+Don't assume the processor has stopped until the onStop event is received.
+
+### reset()
+Resets the CPU. If the optional hard parameter is true it also resets memory.
+
+`reset(hard?: boolean)`
+
+## Event handlers
+The emulator provides two event handlers.
+- onStop - Called when the emulator has stopped
+- onStep - Called each time an instruction has finished
+
+### onStop
+To receive a callback when the processor stops register an event handler.
+The callback will receive one parameter which is the reason the processor stopped.
+Its value can be "user"|"break"|"error".
+
+`em.onStop(reason => console.log(reason));`
+
+### onStep
+To receive a callback when the processor completes an instruction register an event handler.
+The callback will receive one parameter which is the execution result (see step() method).
+
+`em.onStep(result => console.log(result));`
+
 ## But Why?
 Nobody in their right mind writes 6502 machine language anymore.
 There's not a huge market for it these days.

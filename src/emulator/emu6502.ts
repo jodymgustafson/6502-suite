@@ -1,4 +1,4 @@
-import { Cpu6502, CpuRegisters, ExecutionState }  from "./6502cpu";
+import { Cpu6502, CpuRegisters, ExecutionResult }  from "./6502cpu";
 import { disassemble, DisassembledInstruction } from "../disassembler/dasm6502";
 
 export type StopReason = "user"|"break"|"error";
@@ -10,7 +10,7 @@ export class Emulator
     private stopOnBreaK = true;
     private isRunning = false;
     private msPerCycle: number;
-    private onStepCallback: (state: ExecutionState) => any;
+    private onStepCallback: (result: ExecutionResult) => any;
     private onStopCallback: (reason: StopReason) => any;
 
     get registers(): CpuRegisters { return this.cpu.registers; }
@@ -22,14 +22,35 @@ export class Emulator
         this.reset(true);
     }
 
-    /** Defines a function to be called after every instruction is executed */
-    public onStep(callback: (state: ExecutionState) => any): Emulator {
+    /** Sets the function to be called after every instruction is executed */
+    public onStep(callback: (result: ExecutionResult) => any): Emulator {
         this.onStepCallback = callback;
         return this;
     }
-    /** Defines a function to be called when executed is stopped */
+
+    /** Sets the function to be called when executed is stopped */
     public onStop(callback: (reason: StopReason) => any): Emulator {
         this.onStopCallback = callback;
+        return this;
+    }
+
+    /**
+     * Loads an array of bytes into memory.
+     * Be warned: if a number does not fit into a byte it will be truncated.
+     * @param bytes Bytes to load
+     * @param startAddr (optional) Starting address to load bytes
+     */
+    load(bytes: number[], startAddr = 0): Emulator {
+        if (startAddr + bytes.length > 0xFFFF) {
+            throw new Error("The bytes won't fit into memory");
+        }
+
+        //this.memory.splice(startAddr, bytes.length, ...bytes);
+        let pc = startAddr;
+        for (const byte of bytes) {
+            this.memory[pc++] = byte & 0xFF;
+        }
+
         return this;
     }
 
@@ -51,22 +72,22 @@ export class Emulator
     }
 
     /** Executes one instruction */
-    step(): ExecutionState {
+    step(): ExecutionResult {
         return this.cpu.executeNext();
     }
 
     /**
      * Starts running the emulator continuously
-     * @param stopOnBreaK (optional) If true will stop on a break instruction
+     * @param stopOnBreak (optional) If true will stop on a break instruction
      */
-    run(stopOnBreaK = true): Emulator {
+    run(stopOnBreak = true): Emulator {
         this.stopExec = false;
-        this.stopOnBreaK = stopOnBreaK;
+        this.stopOnBreaK = stopOnBreak;
         this.execNext();
         return this;
     }
 
-    /** Stops processing after the current instruction finishes */
+    /** Stops execution after the current instruction finishes */
     halt(): void {
         if (this.isRunning) {
             this.stopExec = true;
@@ -79,6 +100,18 @@ export class Emulator
         bytes.push(0,0,0);
         const inst = disassemble(bytes, this.registers.pc);
         return inst[0];
+    }
+
+    /** Gets the byte at the specified address */
+    getByteAt(addr: number): number {
+        return this.memory[addr & 0xFFFF] || 0;
+    }
+
+    /** Gets the word (2 bytes) at the specified address */
+    getWordAt(addr: number): number {
+        const lower = this.getByteAt(addr);
+        const upper = this.getByteAt(addr + 1);
+        return lower + (upper << 8);
     }
 
     private execNext(): void {
