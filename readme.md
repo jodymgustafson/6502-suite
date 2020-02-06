@@ -16,6 +16,26 @@ const code = `
 const bytes = assemble(code); //=> [0xA9, 0xF1, 0x8D, 0x00, 0x06]
 ```
 
+In addition to the standard 6502 op codes this assembler supports the following:
+- *=[number] - Defines the starting address of the code for computing offsets
+  - `*=$0600`
+- label_name: - Defines a label that can be used as a reference for branches and jumps
+  - `start:`
+  - `BEQ start`
+- define [name] [value] - Defines a constant that can be used in place of numbers (can be shortened to DEF)
+  - `define charout $0FA0`
+  - `JSR charout`
+- DCB - Declares one or more bytes at the current address
+  - `DCB $0a, $1a, $2a, $3a, $4a`
+
+### Tips:
+- The assembler is case insensitive, LDA === lda
+- Numbers prefixed with $ are hex, % are binary, otherwise decimal
+- Everything after a semicolon is ignored (comments)
+  - `LDA #$01 ; set accmulator to 1` 
+- Ending your code with a BRK (break) will stop the emulator (see below)
+- Reference here: https://archive.org/details/VIC-20ProgrammersReferenceGuide1stEdition6thPrinti/page/n155/mode/2up
+
 ## Disassembler
 The disassembler takes an array of bytes and turns it into an array of disassembled instructions.
 
@@ -131,5 +151,5 @@ I tried to remove it, but the code was so bad with hardly no comments or good na
 It looks like it was ported from C or something.
 
 So finally I decided to just write my own versions of an assembler and disassembler borrowing a little here and there.
-Bulding an emulator is a lot more involved so I just included it here in all its glory since it wasn't paired to a UI.
-
+Bulding an emulator is a lot more involved.
+So I just included an existing implementation (thanks N. Landsteiner) with minimal changes and wrapped it in a revealing module.
