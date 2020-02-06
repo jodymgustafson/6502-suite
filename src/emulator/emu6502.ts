@@ -1,25 +1,35 @@
 import { Cpu6502, CpuRegisters, ExecutionResult }  from "./6502cpu";
 import { disassemble, DisassembledInstruction } from "../disassembler/dasm6502";
+import { RandomAccessMemory } from "./ram";
 
 export type StopReason = "user"|"break"|"error";
 
+const DFLT_CYCLES_PER_SEC = 0x100000; // 1Mhz
+
 export class Emulator
 {
-    private cpu = Cpu6502();
+    private _ram = new RandomAccessMemory();
+    private _cpu: Cpu6502 = Cpu6502(this.ram.memory);
+
     private stopExec = false;
     private stopOnBreaK = true;
     private isRunning = false;
+
     private msPerCycle: number;
     private cyclesPerBatch: number;
 
     private onStepCallback: (result: ExecutionResult) => any;
     private onStopCallback: (reason: StopReason) => any;
 
+    get ram(): RandomAccessMemory { return this._ram; }
+    get cpu(): Cpu6502 { return this._cpu; }
     get registers(): CpuRegisters { return this.cpu.registers; }
-    get memory(): number[] { return this.cpu.memory; }
     get totalCycles(): number { return this.cpu.processorCycles; }
 
-    constructor(private cyclesPerSecond = 1000000) {
+    /**
+     * @param cyclesPerSecond (optional) Processor speed, default is 1Mhz
+     */
+    constructor(public cyclesPerSecond = DFLT_CYCLES_PER_SEC) {
         this.msPerCycle = 1000 / this.cyclesPerSecond;
         // Set the batch size such that each one will run ~10ms
         this.cyclesPerBatch = Math.floor(this.cyclesPerSecond / 100);
@@ -52,7 +62,7 @@ export class Emulator
         //this.memory.splice(startAddr, bytes.length, ...bytes);
         let pc = startAddr;
         for (const byte of bytes) {
-            this.memory[pc++] = byte & 0xFF;
+            this.ram.setByte(byte, pc++);
         }
 
         return this;
@@ -69,7 +79,7 @@ export class Emulator
 
         this.cpu.resetCPU();
         if (hard) {
-            this.cpu.clearMemory();
+            this.ram.reset();
         }
 
         return this;
@@ -100,22 +110,8 @@ export class Emulator
 
     /** Returns the dissassembly for the next instruction to be executed */
     getNextInstruction(): DisassembledInstruction {
-        const bytes = this.memory.slice(this.registers.pc, this.registers.pc + 3);
-        bytes.push(0,0,0);
-        const inst = disassemble(bytes, this.registers.pc);
+        const inst = disassemble(this.ram.memory, 0, this.registers.pc, this.registers.pc + 1);
         return inst[0];
-    }
-
-    /** Gets the byte at the specified address */
-    getByteAt(addr: number): number {
-        return this.memory[addr & 0xFFFF] || 0;
-    }
-
-    /** Gets the word (2 bytes) at the specified address */
-    getWordAt(addr: number): number {
-        const lower = this.getByteAt(addr);
-        const upper = this.getByteAt(addr + 1);
-        return lower + (upper << 8);
     }
 
     private execBatch(): void {
@@ -124,13 +120,14 @@ export class Emulator
 
         do {
             const result = this.cpu.executeNext();
-            if (result.isBreak && this.stopOnBreaK) {
-                return this.fireOnStop("break");
-            }
             if (this.onStepCallback) {
                 this.onStepCallback(result);
             }
             
+            if (result.isBreak && this.stopOnBreaK) {
+                return this.fireOnStop("break");
+            }
+
             cycles += result.cycles;
         }
         while (!this.stopExec && cycles < this.cyclesPerBatch);

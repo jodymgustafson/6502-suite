@@ -15,14 +15,14 @@ describe("When load bytes", () => {
         const bytes = assemble(code2);
         const em = new Emulator();
         em.load(bytes);
-        expect(em.getByteAt(0)).toBe(0xA9);
-        expect(em.getByteAt(1)).toBe(0x01);
+        expect(em.ram.getByte(0)).toBe(0xA9);
+        expect(em.ram.getByte(1)).toBe(0x01);
     });
     it("should put the bytes in memory at specific location", () => {
         const bytes = assemble(code2);
         const em = new Emulator();
         em.load(bytes, 0x0100);
-        expect(em.getWordAt(0x0103)).toBe(0x0200);
+        expect(em.ram.getWord(0x0103)).toBe(0x0200);
     });
 });
 
@@ -80,9 +80,10 @@ describe("When emulating code with step", () => {
         expect(em.totalCycles).toBe(25);
         checkRegisters(em, 1, 5, 8, 0, 0xfc, 0x34);
 
-        expect(em.getByteAt(0x0200)).toBe(1);
-        expect(em.getByteAt(0x0201)).toBe(5);
-        expect(em.getByteAt(0x0202)).toBe(8);
+        const mem = em.ram.getBytes(0x0200, 3);
+        expect(mem[0]).toBe(1);
+        expect(mem[1]).toBe(5);
+        expect(mem[2]).toBe(8);
     });
 });
 
