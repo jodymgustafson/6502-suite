@@ -1,4 +1,4 @@
-import { toSignedByte, wordToBytes, parseByteList, byteArrayToHexString, isWord, isByte, isSignedByte, fromSignedByte, hexStringToByteArray } from "../src/util";
+import { toSignedByte, wordToBytes, parseByteList, byteArrayToHexString, isWord, isByte, isSignedByte, fromSignedByte, hexStringToByteArray } from "../util";
 
 describe("When check is word", () => {
     it("should be true", () => {

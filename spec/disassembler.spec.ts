@@ -1,5 +1,5 @@
-import { disassemble, DisassembledInstruction } from "../src/disassembler/dasm6502";
-import { hexStringToByteArray, byteArrayToHexString, toHexString } from "../src/util";
+import { disassemble, DisassembledInstruction } from "../disassembler/dasm6502";
+import { hexStringToByteArray, byteArrayToHexString, toHexString } from "../util";
 
 
 function toTable(dasm: DisassembledInstruction[]): string[] {

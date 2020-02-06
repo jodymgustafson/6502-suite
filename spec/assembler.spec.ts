@@ -1,5 +1,5 @@
-import { parseCode, assemble } from "../src/assembler/asm6502";
-import { toHexString, byteArrayToHexString } from "../src/util";
+import { assemble } from "../assembler/asm6502";
+import { toHexString, byteArrayToHexString } from "../util";
 
 const code1 = `
     LDX #$01
@@ -140,57 +140,57 @@ describe("When assembling code", () => {
         expect(hex).toBe("A2 01 BD 06 00 00 0A 1A 2A 3A 4A 00");
     });
     it("should parse code2", () => {
-        const result = parseCode(code2);
+        const result = assemble(code2);
         const hex = byteArrayToHexString(result);
         expect(hex).toBe("A9 01 8D 00 02 A9 05 8D 01 02 A9 08 8D 02 02");
     });
     it("should parse code3", () => {
-        const result = parseCode(code3);
+        const result = assemble(code3);
         const hex = byteArrayToHexString(result);
         expect(hex).toBe("A9 C0 AA E8 69 C4 00");
     });
     it("should parse code4", () => {
-        const result = parseCode(code4);
+        const result = assemble(code4);
         const hex = byteArrayToHexString(result);
         expect(hex).toBe("A2 08 CA 8E 00 02 E0 03 D0 F8 8E 01 02 00");
     });
     it("should parse code5", () => {
-        const result = parseCode(code5);
+        const result = assemble(code5);
         const hex = byteArrayToHexString(result);
         expect(hex).toBe("A9 01 C9 02 D0 02 85 22 00");
     });
     it("should parse code6", () => {
-        const result = parseCode(code6);
+        const result = assemble(code6);
         const hex = byteArrayToHexString(result);
         expect(hex).toBe("A9 01 85 F0 A9 CC 85 F1 6C F0 00");
     });
     it("should parse indexed indirect", () => {
-        const result = parseCode(code7);
+        const result = assemble(code7);
         const hex = byteArrayToHexString(result);
         expect(hex).toBe("A2 01 A9 05 85 01 A9 07 85 02 A0 0A 8C 05 07 A1 00");
     });
     it("should parse indirect indexed", () => {
-        const result = parseCode(code8);
+        const result = assemble(code8);
         const hex = byteArrayToHexString(result);
         expect(hex).toBe("A0 01 A9 03 85 01 A9 07 85 02 A2 0A 8E 04 07 B1 01");
     });
     it("should parse stack ops", () => {
-        const result = parseCode(code9);
+        const result = assemble(code9);
         const hex = byteArrayToHexString(result)
         expect(hex).toBe("A2 00 A0 00 8A 99 00 02 48 E8 C8 C0 10 D0 F5 68 99 00 02 C8 C0 20 D0 F7");
     });
     it("should parse jump", () => {
-        const result = parseCode(code10);
+        const result = assemble(code10);
         const hex = byteArrayToHexString(result)
         expect(hex).toBe("A9 03 4C 08 06 00 00 00 8D 00 02");
     });
     it("should parse jsr/rts", () => {
-        const result = parseCode(code11);
+        const result = assemble(code11);
         const hex = byteArrayToHexString(result)
         expect(hex).toBe("20 09 06 20 0C 06 20 12 06 A2 00 60 E8 E0 05 D0 FB 60 00");
     });
     it("should parse defines", () => {
-        const result = parseCode(code12);
+        const result = assemble(code12);
         const hex = byteArrayToHexString(result)
         expect(hex).toBe("A0 00 A2 00 E8 E0 FF D0 FB C8 C0 AA D0 F6 00");
     });

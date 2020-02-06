@@ -1,6 +1,6 @@
-import { assemble } from "../src/assembler/asm6502";
-import { Emulator } from "../src/emulator/emu6502";
-import { DisassembledInstruction } from "../src/disassembler/dasm6502";
+import { assemble } from "../assembler/asm6502";
+import { Emulator } from "../emulator/emu6502";
+import { DisassembledInstruction } from "../disassembler/dasm6502";
 
 const code2 = `
 LDA #$01

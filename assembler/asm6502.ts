@@ -20,13 +20,11 @@ export type MetaInstruction = {
     data?: any
 }
 
+/**
+ * Assembles 6502 code into bytes
+ * @param code Lines of assembly code
+ */
 export function assemble(code: string): number[]
-{
-    const bytes = parseCode(code);
-    return bytes;
-}
-
-export function parseCode(code: string): number[]
 {
     // First pass parses code into operations
     const instructions: MetaInstruction[] = parseLines(code.split("\n"));

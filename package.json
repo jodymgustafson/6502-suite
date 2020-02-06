@@ -3,10 +3,15 @@
   "version": "1.0.0",
   "description": "Assembler, disassember and emulator for 6502 CPU",
   "main": "index.js",
+  "types": "index.d.ts",
   "scripts": {
-    "test": "test"
+    "test": "jasmine",
+    "build": "tsc"
   },
-  "repository": "https://github.com/jodymgustafson/6502-suite",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jodymgustafson/6502-suite"
+  },
   "keywords": [
     "6502",
     "assembler",
@@ -14,7 +19,7 @@
     "emulator"
   ],
   "author": "JM Gustafson",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@types/jasmine": "^3.5.1",
     "@types/node": "^13.1.8",

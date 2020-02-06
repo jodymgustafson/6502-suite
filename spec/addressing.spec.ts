@@ -1,4 +1,4 @@
-import { checkZeroPage, checkAbsolute, checkImmediate, checkNonAddress, checkIndirect, checkBranch } from "../src/assembler/addressing";
+import { checkZeroPage, checkAbsolute, checkImmediate, checkNonAddress, checkIndirect, checkBranch } from "../assembler/addressing";
 
 describe("When checking non address mode", () => {
     it("should get non address", () => {

@@ -1,0 +1,9 @@
+tsconfig.json
+**/*.js.map
+**/*.ts
+!**/*.d.ts
+/.git
+/spec
+/.vscode
+debug.*
+*.tgz
