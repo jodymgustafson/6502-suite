@@ -1,8 +1,9 @@
 export class RandomAccessMemory
 {
     private _memory: number[] = [];
-
     get memory(): number[] { return this._memory;}
+
+    constructor(private maxBytes = 0xFFFF) {}
 
     reset(): void {
         //this._memory = [];
@@ -11,12 +12,12 @@ export class RandomAccessMemory
 
     /** Gets the byte at the specified address */
     getByte(addr: number): number {
-        return this._memory[addr & 0xFFFF] || 0;
+        return this._memory[addr & this.maxBytes] || 0;
     }
 
     /** Sets a byte at the specified location */
     setByte(byte: number, addr: number): RandomAccessMemory {
-        this.memory[addr] = byte & 0xFF;
+        this.memory[addr & this.maxBytes] = byte & 0xFF;
         return this;
     }
 
@@ -42,5 +43,15 @@ export class RandomAccessMemory
         }
 
         return bytes;
+    }
+
+    /** Sets a number of contiguous bytes */
+    setBytes(bytes: number[], addr = 0): RandomAccessMemory {
+        let pc = addr;
+        for (const byte of bytes) {
+            this.setByte(byte, pc++);
+        }
+
+        return this;
     }
 }

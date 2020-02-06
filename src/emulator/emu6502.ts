@@ -4,7 +4,7 @@ import { RandomAccessMemory } from "./ram";
 
 export type StopReason = "user"|"break"|"error";
 
-const DFLT_CYCLES_PER_SEC = 0x100000; // 1Mhz
+const DFLT_CYCLES_PER_SEC = 1000000; // 1Mhz
 
 export class Emulator
 {
@@ -59,11 +59,7 @@ export class Emulator
             throw new Error("The bytes won't fit into memory");
         }
 
-        //this.memory.splice(startAddr, bytes.length, ...bytes);
-        let pc = startAddr;
-        for (const byte of bytes) {
-            this.ram.setByte(byte, pc++);
-        }
+        this.ram.setBytes(bytes, startAddr);
 
         return this;
     }
