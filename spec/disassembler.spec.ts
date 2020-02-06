@@ -84,4 +84,19 @@ describe("When disassembling code", () => {
             '0608 8D 00 02 STA $0200'
         ]);
     });
+    it("should parse code12", () => {
+        const result = disassemble(hexStringToByteArray("A0 00 A2 00 E8 E0 FF D0 FB C8 C0 AA D0 F6 00"));
+        //console.log(toTable(result));
+        expect(toTable(result)).toEqual([
+            '0000 A0 00    LDY #$00',
+            '0002 A2 00    LDX #$00',
+            '0004 E8       INX',
+            '0005 E0 FF    CPX #$FF',
+            '0007 D0 FB    BNE $0004',
+            '0009 C8       INY',
+            '000A C0 AA    CPY #$AA',
+            '000C D0 F6    BNE $0004',
+            '000E 00       BRK'
+        ]);
+    });
 });

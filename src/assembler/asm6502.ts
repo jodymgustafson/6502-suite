@@ -89,36 +89,43 @@ function resolveLabel(line: MetaInstruction, lines: MetaInstruction[]): number
 function parseLines(lines: string[]): MetaInstruction[]
 {
     const instructions: MetaInstruction[] = [];
+    const defines = {};
     let addr = 0;
 
     for (let line of lines) {
-        // remove comments 
-        const commentStart = line.indexOf(";");
-        if (commentStart > 0) {
-            line = line.slice(0,commentStart);
-        }
+        line = removeComments(line);
 
         // if it's a label and there's code after the label, split into 2 lines
         const labelEnd = line.indexOf(":");
         if (labelEnd >= 0 && labelEnd < line.length) {
             // parse the label and add it
-            instructions.push(parseLine(line.slice(0, labelEnd + 1).trim(), addr));
+            instructions.push(parseLine(line.slice(0, labelEnd + 1).trim(), addr, defines));
             // get the code after the label
             line = line.slice(labelEnd + 1);
         }
 
         line = line.trim().toUpperCase();
         if (line) {
-            const parsed = parseLine(line, addr);
-            instructions.push(parsed);
-            addr = parsed.address;
+            const parsed = parseLine(line, addr, defines);
+            if (!isDefine(parsed)) {
+                instructions.push(parsed);
+                addr = parsed.address;
+            }
         }
     };
 
     return instructions;
 }
 
-function parseLine(line: string, addr: number): MetaInstruction
+function removeComments(line: string) {
+    const commentStart = line.indexOf(";");
+    if (commentStart > 0) {
+        line = line.slice(0, commentStart);
+    }
+    return line;
+}
+
+function parseLine(line: string, addr: number, defines: any): MetaInstruction
 {
     //console.log(line);
     if (line.startsWith("*=")) {
@@ -127,6 +134,7 @@ function parseLine(line: string, addr: number): MetaInstruction
 
     // format: operation [operand]
     const tokens = /^(\S+)\s*(.+)?$/.exec(line).slice(1, 3);
+
     //console.log(tokens);
     const instr: MetaInstruction = {
         operation: tokens[0],
@@ -140,13 +148,20 @@ function parseLine(line: string, addr: number): MetaInstruction
         instr.byteCount = instr.data.length;
     }
     else if (isLabel(instr)) {
+        // Remove the colon
         instr.opLabel = instr.operation.slice(0, -1).toUpperCase();
         instr.operation = "LABEL";
     }
     else if (isDefine(instr)) {
-        console.log(instr);
+        // Operand format: [name value]
+        const tuple = instr.operand.split(/\s/);
+        defines[tuple[0]] = tuple[1];
+        return instr;
     }
     else {
+        if (instr.operand) {
+            instr.operand = replaceDefines(instr.operand, defines);
+        }
         setOpCode(instr);
     }
 
@@ -165,7 +180,19 @@ function isDCB(parsed: MetaInstruction) {
     return parsed.operation === "DCB";
 }
 function isDefine(parsed: MetaInstruction) {
-    return parsed.operation === "DEFINE";
+    return parsed.operation === "DEFINE" || parsed.operation === "DEF";
+}
+
+function replaceDefines(operand: string, defines: any): string {
+    for (const name in defines) {
+        const value: string = defines[name];
+        const idx = operand.indexOf(name);
+        if (idx >= 0) {
+            return operand.replace(name, value);
+        }
+    }
+
+    return operand;
 }
 
 function setOpCode(instr: MetaInstruction): void

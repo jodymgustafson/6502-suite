@@ -117,6 +117,22 @@ loop:
 end:
     BRK`;
 
+const code12 = `
+define max_x $FF
+define max_y $AA
+  LDY #$00
+start:
+  LDX #$00
+start_x:
+  INX
+  CPX #max_x
+  BNE start_x
+  INY
+  CPY #max_y
+  BNE start_x
+  BRK
+`;
+
 describe("When assembling code", () => {
     it("should parse code1", () => {
         const result = assemble(code1);
@@ -172,5 +188,10 @@ describe("When assembling code", () => {
         const result = parseCode(code11);
         const hex = byteArrayToHexString(result)
         expect(hex).toBe("20 09 06 20 0C 06 20 12 06 A2 00 60 E8 E0 05 D0 FB 60 00");
+    });
+    it("should parse defines", () => {
+        const result = parseCode(code12);
+        const hex = byteArrayToHexString(result)
+        expect(hex).toBe("A0 00 A2 00 E8 E0 FF D0 FB C8 C0 AA D0 F6 00");
     });
 });

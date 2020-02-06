@@ -1,13 +1,15 @@
 const code1 = `
+define max_x $FF;
+define max_y $AA;
   LDY #$00
 start:
   LDX #$00
 start_x:
   INX
-  CPX #$FF
+  CPX #max_x
   BNE start_x
   INY
-  CPY #$FF
+  CPY #max_y
   BNE start_x
   BRK
 `;
