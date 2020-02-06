@@ -149,7 +149,10 @@ At first I was going to just take some existing code from those other projects, 
 As I dug into them I found they had UI code mixed in with the other code making it impossible to use outside of that web page.
 I tried to remove it, but the code was so bad with hardly no comments or good naming conventions.
 It looks like it was ported from C or something.
-
 So finally I decided to just write my own versions of an assembler and disassembler borrowing a little here and there.
+
 Bulding an emulator is a lot more involved.
-So I just included an existing implementation (thanks N. Landsteiner) with minimal changes and wrapped it in a revealing module.
+So I just included an existing implementation of a 6502 CPU emulator (thanks N. Landsteiner) with minimal changes.
+Then I created my own emulator class as a facade to the CPU emulator to control access to it and provide utilities.
+
+Code hard! - JM Gustafson
