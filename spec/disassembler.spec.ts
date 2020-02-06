@@ -1,6 +1,5 @@
 import { disassemble, DisassembledInstruction } from "../disassembler/dasm6502";
-import { hexStringToByteArray, byteArrayToHexString, toHexString } from "../util";
-
+import { hexStringToByteArray, byteArrayToHexString, toHexString, dasmToString } from "../util";
 
 function toTable(dasm: DisassembledInstruction[]): string[] {
     return dasm.map(d => `${toHexString(d.address, 2)} ${byteArrayToHexString(d.bytes)} ${" ".repeat(9-3*d.bytes.length)}${d.assembly}`)
@@ -9,13 +8,13 @@ function toTable(dasm: DisassembledInstruction[]): string[] {
 describe("When disassembling code", () => {
     it("should parse code2", () => {
         const result = disassemble(hexStringToByteArray("A9 01 8D 00 02 A9 05 8D 01 02 A9 08 8D 02 02"));
-        expect(toTable(result)).toEqual([
-            '0000 A9 01    LDA #$01',
-            '0002 8D 00 02 STA $0200',
-            '0005 A9 05    LDA #$05',
-            '0007 8D 01 02 STA $0201',
-            '000A A9 08    LDA #$08',
-            '000C 8D 02 02 STA $0202'
+        expect(result.map(d => dasmToString(d))).toEqual([
+            'LDA #$01      ; 0000 A9 01',
+            'STA $0200     ; 0002 8D 00 02',
+            'LDA #$05      ; 0005 A9 05',
+            'STA $0201     ; 0007 8D 01 02',
+            'LDA #$08      ; 000A A9 08',
+            'STA $0202     ; 000C 8D 02 02'
         ]);
     });
     it("should parse code4", () => {

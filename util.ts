@@ -1,3 +1,5 @@
+import { DisassembledInstruction } from "./disassembler/dasm6502";
+
 export function parseNumber(num: string): number
 {
     if (num[0] === "$") {
@@ -78,4 +80,10 @@ export function hexStringToByteArray(hex: string, separator = " "): number[] {
 /** Parses a string of numbers separated by commas into an array of numbers  */
 export function parseByteList(byteList: string): number[] {
     return byteList.split(",").map(n => parseNumber(n.trim()) & 0xFF);
+}
+
+/** Converts a DisassembledInstruction to a formatted string */
+export function dasmToString(...dasm: DisassembledInstruction[]): string {
+    return dasm.map(d => `${d.assembly} ${" ".repeat(12-d.assembly.length)} ; ${toHexString(d.address, 2)} ${byteArrayToHexString(d.bytes)}`)
+            .join("\n");
 }

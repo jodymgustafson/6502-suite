@@ -1,4 +1,5 @@
 import { Emulator, assemble, disassemble, util } from "./index";
+import { dasmToString } from "./util";
 
 const code1 = `
 define max_x $FF;
@@ -16,7 +17,9 @@ start_x:
   BRK
 `;
 
-//disassemble(util.hexStringToByteArray("A9 03 4C 08 06 00 00 00 8D 00 02"), 0x0600);
+const dasm = disassemble(util.hexStringToByteArray("A9 03 4C 08 06 00 00 00 8D 00 02"), 0x0600);
+console.log(dasmToString(...dasm));
+
 // const data = "$0A, $1A, $2A, $3A, $4A".split(",").map(n => parseNumber(n.trim()) & 0xFF);
 // data.toString();
 
