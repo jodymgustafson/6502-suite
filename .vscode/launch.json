@@ -8,10 +8,7 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "program": "${workspaceFolder}\\debug.js",
+            "program": "${workspaceFolder}/debug.ts",
             "outFiles": [
                 "${workspaceFolder}/**/*.js"
             ]

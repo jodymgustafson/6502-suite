@@ -93,7 +93,7 @@ export function checkIndirect(op: string): AddressingInfo {
 /** Checks if the operand is a valid branch label or offset */
 export function checkBranch(op: string): AddressingInfo {
     // format: label|signed-byte
-    const match = /^([a-zA-Z]+\w*|[$%]?[-]?[\dA-F]{1,3})$/.test(op);
+    const match = /^([a-zA-Z]+\w*|[$%]?[\dA-F]{1,5})$/.test(op);
     if (match) {
         let num = parseNumber(op);
         if (!isFinite(num)) {
@@ -104,7 +104,7 @@ export function checkBranch(op: string): AddressingInfo {
         }
 
         return {
-            value: toSignedByte(num)
+            value: num
         }
 }
 

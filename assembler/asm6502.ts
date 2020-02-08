@@ -64,40 +64,36 @@ function parseInstructions(instructions: MetaInstruction[]) {
     return bytes;
 }
 
-function getInstructionBytes(i: MetaInstruction,  instructions: MetaInstruction[]): number[] {
+function getInstructionBytes(instr: MetaInstruction,  instructions: MetaInstruction[]): number[] {
     const bytes = [];
 
-    if (i.opLabel) {
+    if (instr.opLabel) {
         // turn the label into an address
-        i.opValue = resolveLabel(i, instructions);
+        instr.opValue = resolveLabel(instr, instructions);
     }
 
     // Get the op code byte
-    bytes.push(i.opCode);
+    bytes.push(instr.opCode);
 
     // Get the op value bytes
-    if (i.byteCount === 3) {
-        bytes.push(...wordToBytes(i.opValue));
+    if (instr.byteCount === 3) {
+        bytes.push(...wordToBytes(instr.opValue));
     }
-    else if (i.byteCount === 2) {
-        bytes.push(i.opValue);
+    else if (instr.byteCount === 2) {
+        bytes.push(instr.opValue);
     }
 
     return bytes;
 }
 
-function resolveLabel(line: MetaInstruction, lines: MetaInstruction[]): number
+function resolveLabel(instr: MetaInstruction, lines: MetaInstruction[]): number
 {
-    const label = line.opLabel;
+    const label = instr.opLabel;
     const foundLabel = lines.find(l => l.operation === "LABEL" && l.opLabel === label);
     if (foundLabel) {
-        if (line.byteCount === 2) {
+        if (instr.byteCount === 2) {
             // branch, compute offset as signed byte
-            const offset = foundLabel.address - line.address;
-            if (!isSignedByte(offset)) {
-                throw new Error("Label must be within 127 bytes: " + offset);
-            }
-            return toSignedByte(offset);
+            return getAddressOffset(instr.address, foundLabel.address);
         }
         else {
             // jump
@@ -105,6 +101,20 @@ function resolveLabel(line: MetaInstruction, lines: MetaInstruction[]): number
         }
     }
     throw new Error("Invalid label: " + label);
+}
+
+/**
+ * Compute offset between two addressed as a signed byte
+ * @param from From address
+ * @param to To address
+ */
+function getAddressOffset(from: number, to: number): number {
+    // 
+    const offset = to - from;
+    if (!isSignedByte(offset)) {
+        throw new Error("Label must be within 127 bytes: " + offset);
+    }
+    return toSignedByte(offset);
 }
 
 function parseLines(lines: string[], baseAddr: number): MetaInstruction[]
@@ -194,22 +204,27 @@ function parseLine(line: string, addr: number, defines: any): MetaInstruction
     return instr;
 }
 
-function isDirective(parsed: MetaInstruction): boolean {
-    return isLabel(parsed) || isDCB(parsed) || isDefine(parsed) || isSetAddress(parsed);    
+function isDirective(instr: MetaInstruction): boolean {
+    return isLabel(instr) || isDCB(instr) || isDefine(instr) || isSetAddress(instr);    
 }
-function isLabel(parsed: MetaInstruction): boolean {
-    return parsed.operation.endsWith(":") || parsed.operation === "LABEL";
+function isLabel(instr: MetaInstruction): boolean {
+    return instr.operation.endsWith(":") || instr.operation === "LABEL";
 }
-function isDCB(parsed: MetaInstruction): boolean {
-    return parsed.operation === "DCB";
+function isDCB(instr: MetaInstruction): boolean {
+    return instr.operation === "DCB";
 }
-function isDefine(parsed: MetaInstruction): boolean {
-    return parsed.operation === "DEFINE" || parsed.operation === "DEF";
+function isDefine(instr: MetaInstruction): boolean {
+    return instr.operation === "DEFINE" || instr.operation === "DEF";
 }
-function isSetAddress(parsed: MetaInstruction): boolean {
-    return parsed.operation === "*=";
+function isSetAddress(instr: MetaInstruction): boolean {
+    return instr.operation === "*=";
 }
 
+/** 
+ * Looks for constants and replaces them with the value
+ * @param operand The operand to search
+ * @param defines A map of names to values
+ */
 function replaceDefines(operand: string, defines: any): string {
     for (const name in defines) {
         const value: string = defines[name];
@@ -236,7 +251,7 @@ function setOpCode(instr: MetaInstruction): void
             instr.opLabel = info.value as string;
         }
         else {
-            instr.opValue = info.value as number;
+            instr.opValue = getAddressOffset(instr.address, info.value);
         }
         instr.opCode = opCodeGroup[OpCodeIndex.BRA];
         instr.byteCount = 2;
