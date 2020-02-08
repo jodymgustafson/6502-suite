@@ -23,11 +23,12 @@ export type MetaInstruction = {
 /**
  * Assembles 6502 code into bytes
  * @param code Lines of assembly code
+ * @param baseAddr (optional) Address the code will start at
  */
-export function assemble(code: string): number[]
+export function assemble(code: string, baseAddr = 0): number[]
 {
     // First pass parses code into operations
-    const instructions: MetaInstruction[] = parseLines(code.split("\n"));
+    const instructions: MetaInstruction[] = parseLines(code.split("\n"), baseAddr);
     //console.log(lines);
 
     // Second pass resolves labels and parses operations into bytes
@@ -44,20 +45,42 @@ function parseInstructions(instructions: MetaInstruction[]) {
     const bytes: number[] = [];
     for (const i of instructions) {
         if (i.opCode !== undefined) {
-            if (i.opLabel) {
-                i.opValue = resolveLabel(i, instructions);
-            }
-            bytes.push(i.opCode);
-            if (i.byteCount === 3) {
-                bytes.push(...wordToBytes(i.opValue));
-            }
-            else if (i.byteCount === 2) {
-                bytes.push(i.opValue);
-            }
+            bytes.push(...getInstructionBytes(i, instructions));
         }
-        else if (i.operation === "DCB") {
+        else if (isDCB(i)) {
             bytes.push(...i.data as number[]);
         }
+        else if (isLabel(i)) {
+            // nothing
+        }
+        else if (isSetAddress(i)) {
+            // nothing
+        }
+        else {
+            throw new Error("Invalid instruction: " + JSON.stringify(i));
+        }
+    }
+
+    return bytes;
+}
+
+function getInstructionBytes(i: MetaInstruction,  instructions: MetaInstruction[]): number[] {
+    const bytes = [];
+
+    if (i.opLabel) {
+        // turn the label into an address
+        i.opValue = resolveLabel(i, instructions);
+    }
+
+    // Get the op code byte
+    bytes.push(i.opCode);
+
+    // Get the op value bytes
+    if (i.byteCount === 3) {
+        bytes.push(...wordToBytes(i.opValue));
+    }
+    else if (i.byteCount === 2) {
+        bytes.push(i.opValue);
     }
 
     return bytes;
@@ -84,11 +107,11 @@ function resolveLabel(line: MetaInstruction, lines: MetaInstruction[]): number
     throw new Error("Invalid label: " + label);
 }
 
-function parseLines(lines: string[]): MetaInstruction[]
+function parseLines(lines: string[], baseAddr: number): MetaInstruction[]
 {
     const instructions: MetaInstruction[] = [];
     const defines = {};
-    let addr = 0;
+    let addr = baseAddr;
 
     for (let line of lines) {
         line = removeComments(line);
@@ -105,6 +128,9 @@ function parseLines(lines: string[]): MetaInstruction[]
         line = line.trim().toUpperCase();
         if (line) {
             const parsed = parseLine(line, addr, defines);
+            if (isSetAddress(parsed)) {
+                addr = parsed.address;
+            }
             if (!isDefine(parsed)) {
                 instructions.push(parsed);
                 addr = parsed.address;
@@ -169,16 +195,19 @@ function parseLine(line: string, addr: number, defines: any): MetaInstruction
 }
 
 function isDirective(parsed: MetaInstruction): boolean {
-    return isLabel(parsed) || isDCB(parsed) || isDefine(parsed);    
+    return isLabel(parsed) || isDCB(parsed) || isDefine(parsed) || isSetAddress(parsed);    
 }
-function isLabel(parsed: MetaInstruction) {
-    return parsed.operation.endsWith(":");
+function isLabel(parsed: MetaInstruction): boolean {
+    return parsed.operation.endsWith(":") || parsed.operation === "LABEL";
 }
-function isDCB(parsed: MetaInstruction) {
+function isDCB(parsed: MetaInstruction): boolean {
     return parsed.operation === "DCB";
 }
-function isDefine(parsed: MetaInstruction) {
+function isDefine(parsed: MetaInstruction): boolean {
     return parsed.operation === "DEFINE" || parsed.operation === "DEF";
+}
+function isSetAddress(parsed: MetaInstruction): boolean {
+    return parsed.operation === "*=";
 }
 
 function replaceDefines(operand: string, defines: any): string {
@@ -260,6 +289,7 @@ function parseBase(line: string): MetaInstruction
 {
     // get the value after *=, that will be the new address
     const base = line.slice(2).trim();
+    //console.log("base", base);
     return {
         operation: "*=",
         operand: base,

@@ -126,6 +126,13 @@ The callback will receive one parameter which is the execution result (see step(
 
 `em.onStep(result => console.log(result));`
 
+### onBatch
+To receive a callback when the processor completes a batch of instruction register an event handler.
+The callback will receive one parameter which is the number of cycles completed in the batch.
+When running at high cycles per second (more than 1000) it's advisable to get callbacks per batch rather than per step. 
+
+`em.onBatch(cycles => console.log(cycles));`
+
 ## But Why?
 Nobody in their right mind writes 6502 machine language anymore.
 There's not a huge market for it these days.

@@ -17,15 +17,16 @@ start_x:
   BRK
 `;
 
-const dasm = disassemble(util.hexStringToByteArray("A9 03 4C 08 06 00 00 00 8D 00 02"), 0x0600);
-console.log(dasmToString(...dasm));
-
 // const data = "$0A, $1A, $2A, $3A, $4A".split(",").map(n => parseNumber(n.trim()) & 0xFF);
 // data.toString();
 
 const emu = new Emulator();
 const bytes = assemble(code1);
 console.log(util.byteArrayToHexString(bytes));
+
+const dasm = disassemble(bytes);
+console.log(dasmToString(...dasm));
+
 emu.load(bytes);
 //emu.onStep(state => console.log(emu.totalCycles,emu.registers.x));
 emu.onStop(reason => {
