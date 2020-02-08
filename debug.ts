@@ -13,7 +13,7 @@ start_x:
   BNE start_x
   INY
   CPY #max_y
-  BNE start_x
+  BNE start
   BRK
 `;
 

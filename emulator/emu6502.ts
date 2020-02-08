@@ -13,32 +13,46 @@ export class Emulator
 
     private stopExec = false;
     private stopOnBreaK = true;
-    private isRunning = false;
+    private _isRunning = false;
 
     private msPerCycle: number;
+    private _cyclesPerSecond: number;
     private cyclesPerBatch: number;
 
     private onStepCallback: (result: ExecutionResult) => any;
+    private onBatchCallback: (cycles: number) => any;
     private onStopCallback: (reason: StopReason) => any;
 
     get ram(): RandomAccessMemory { return this._ram; }
     get cpu(): Cpu6502 { return this._cpu; }
     get registers(): CpuRegisters { return this.cpu.registers; }
     get totalCycles(): number { return this.cpu.processorCycles; }
+    get isRunning(): boolean { return this._isRunning; }
+    get cyclesPerSecond(): number { return this._cyclesPerSecond; }
+    set cyclesPerSecond(cps: number) {
+        this._cyclesPerSecond = cps;
+        this.msPerCycle = 1000 / this._cyclesPerSecond;
+        // Set the batch size such that each one will run ~10ms
+        this.cyclesPerBatch = Math.floor(this._cyclesPerSecond / 100);
+    }
 
     /**
      * @param cyclesPerSecond (optional) Processor speed, default is 1Mhz
      */
-    constructor(public cyclesPerSecond = DFLT_CYCLES_PER_SEC) {
-        this.msPerCycle = 1000 / this.cyclesPerSecond;
-        // Set the batch size such that each one will run ~10ms
-        this.cyclesPerBatch = Math.floor(this.cyclesPerSecond / 100);
+    constructor(cyclesPerSecond = DFLT_CYCLES_PER_SEC) {
+        this.cyclesPerSecond = cyclesPerSecond;
         this.reset(true);
     }
 
     /** Sets the function to be called after every instruction is executed */
     public onStep(callback: (result: ExecutionResult) => any): Emulator {
         this.onStepCallback = callback;
+        return this;
+    }
+
+    /** Sets the function to be called after every batch of instruction is executed */
+    public onBatch(callback: (cycles: number) => any): Emulator {
+        this.onBatchCallback = callback;
         return this;
     }
 
@@ -69,7 +83,7 @@ export class Emulator
      * @param hard (optional) If true memory is cleared
      */
     reset(hard = false): Emulator {
-        if (this.isRunning) {
+        if (this._isRunning) {
             throw new Error("Emulator must be stopped before calling reset");
         }
 
@@ -93,13 +107,17 @@ export class Emulator
     run(stopOnBreak = true): Emulator {
         this.stopExec = false;
         this.stopOnBreaK = stopOnBreak;
-        this.execBatch();
+        this._isRunning = true;
+
+        // Start async
+        setTimeout(() => this.execBatch(), 0);
+
         return this;
     }
 
     /** Stops execution after the current instruction finishes */
     halt(): void {
-        if (this.isRunning) {
+        if (this._isRunning) {
             this.stopExec = true;
         }
     }
@@ -128,6 +146,10 @@ export class Emulator
         }
         while (!this.stopExec && cycles < this.cyclesPerBatch);
 
+        if (this.onBatchCallback) {
+            this.onBatchCallback(cycles);
+        }
+
         if (this.stopExec) {
             return this.fireOnStop("user");
         }
@@ -140,6 +162,7 @@ export class Emulator
     }
 
     private fireOnStop(reason: StopReason): void {
+        this._isRunning = false;
         if (this.onStopCallback) {
             this.onStopCallback(reason);
         }

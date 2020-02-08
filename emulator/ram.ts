@@ -3,7 +3,10 @@ export class RandomAccessMemory
     private _memory: number[] = [];
     get memory(): number[] { return this._memory;}
 
-    constructor(private maxBytes = 0xFFFF) {}
+    constructor(private maxBytes = 0xFFFF) {
+        // Make memory have a size by setting the last value
+        this._memory[maxBytes] = 0;
+    }
 
     reset(): void {
         //this._memory = [];
