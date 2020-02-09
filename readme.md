@@ -25,8 +25,8 @@ In addition to the standard 6502 op codes this assembler supports the following:
 - define [name] [value] - Defines a constant that can be used in place of numbers (can be shortened to DEF)
   - `define charout $0FA0`
   - `JSR charout`
-- DCB - Declares one or more bytes at the current address
-  - `DCB $0a, $1a, $2a, $3a, $4a`
+- DCB - Declares one or more bytes at the current address, including strings
+  - `DCB $0a, "foo", $2a, 'bar', $4a`
 
 ### Tips:
 - The assembler is case insensitive, LDA === lda

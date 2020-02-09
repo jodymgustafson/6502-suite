@@ -178,7 +178,7 @@ function parseLine(line: string, addr: number, defines: any): MetaInstruction
     };
 
     if (isDCB(instr)) {
-        instr.data = parseByteList(instr.operand);
+        instr.data = parseDCBToBytes(instr.operand);
         instr.byteCount = instr.data.length;
     }
     else if (isLabel(instr)) {
@@ -311,4 +311,23 @@ function parseBase(line: string): MetaInstruction
         address: parseNumber(base),
         byteCount: 0
     };
+}
+
+function parseDCBToBytes(operand: string): number[] {
+    const bytes = [];
+
+    const tokens = operand.split(",");
+    for (let token of tokens) {
+        token = token.trim();
+        // Check if it's a string
+        const match = /['"]{1}(.+)['"]{1}/.exec(token);
+        if (match) {
+            // Convert string to bytes
+            bytes.push(...match[1].split("").map(c => c.charCodeAt(0)));
+        }
+        else {
+            bytes.push(parseNumber(token.trim()) & 0xFF);
+        }
+    }
+    return bytes;
 }

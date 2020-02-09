@@ -133,6 +133,10 @@ start_x:
   BRK
 `;
 
+const code13 = 
+    `DCB "Hello World!", $AA,'"foo"'`
+;
+
 describe("When assembling code", () => {
     it("should parse code1", () => {
         const result = assemble(code1);
@@ -193,5 +197,10 @@ describe("When assembling code", () => {
         const result = assemble(code12);
         const hex = byteArrayToHexString(result)
         expect(hex).toBe("A0 00 A2 00 E8 E0 FF D0 FB C8 C0 AA D0 F6 00");
+    });
+    it("should parse declared bytes", () => {
+        const result = assemble(code13);
+        const hex = byteArrayToHexString(result)
+        expect(hex).toBe("48 45 4C 4C 4F 20 57 4F 52 4C 44 21 AA 22 46 4F 4F 22");
     });
 });

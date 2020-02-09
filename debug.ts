@@ -15,17 +15,22 @@ start_x:
   CPY #max_y
   BNE start
   BRK
+data:
+  DCB "Hello", "World", $23
 `;
 
 // const data = "$0A, $1A, $2A, $3A, $4A".split(",").map(n => parseNumber(n.trim()) & 0xFF);
 // data.toString();
 
 const emu = new Emulator();
-const bytes = assemble(code1);
+let bytes = assemble(code1);
 console.log(util.byteArrayToHexString(bytes));
 
 const dasm = disassemble(bytes);
 console.log(dasmToString(...dasm));
+
+bytes = assemble(code1);
+console.log(util.byteArrayToHexString(bytes));
 
 emu.load(bytes);
 //emu.onStep(state => console.log(emu.totalCycles,emu.registers.x));
