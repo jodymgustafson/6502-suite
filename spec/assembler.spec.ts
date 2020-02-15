@@ -137,6 +137,23 @@ const code13 =
     `DCB "Hello World!", $AA,'"foo"'`
 ;
 
+const allComments = 
+    `;comment 1
+    ; comment 2
+           
+`;
+
+const lsbMsb = 
+`*=$0600
+define print1 $80F2
+  LDX #<print1
+  LDY #>print1
+  LDX #<data
+  LDY #>data
+data:
+  BRK
+`;
+
 describe("When assembling code", () => {
     it("should parse code1", () => {
         const result = assemble(code1);
@@ -180,27 +197,37 @@ describe("When assembling code", () => {
     });
     it("should parse stack ops", () => {
         const result = assemble(code9);
-        const hex = byteArrayToHexString(result)
+        const hex = byteArrayToHexString(result);
         expect(hex).toBe("A2 00 A0 00 8A 99 00 02 48 E8 C8 C0 10 D0 F5 68 99 00 02 C8 C0 20 D0 F7");
     });
     it("should parse jump", () => {
         const result = assemble(code10);
-        const hex = byteArrayToHexString(result)
+        const hex = byteArrayToHexString(result);
         expect(hex).toBe("A9 03 4C 08 06 00 00 00 8D 00 02");
     });
     it("should parse jsr/rts", () => {
         const result = assemble(code11);
-        const hex = byteArrayToHexString(result)
+        const hex = byteArrayToHexString(result);
         expect(hex).toBe("20 09 06 20 0C 06 20 12 06 A2 00 60 E8 E0 05 D0 FB 60 00");
     });
     it("should parse defines", () => {
         const result = assemble(code12);
-        const hex = byteArrayToHexString(result)
+        const hex = byteArrayToHexString(result);
         expect(hex).toBe("A0 00 A2 00 E8 E0 FF D0 FB C8 C0 AA D0 F6 00");
     });
     it("should parse declared bytes", () => {
         const result = assemble(code13);
+        const hex = byteArrayToHexString(result);
+        expect(hex).toBe("48 65 6C 6C 6F 20 57 6F 72 6C 64 21 AA 22 66 6F 6F 22");
+    });
+    it("should parse out comments", () => {
+        const result = assemble(allComments);
         const hex = byteArrayToHexString(result)
-        expect(hex).toBe("48 45 4C 4C 4F 20 57 4F 52 4C 44 21 AA 22 46 4F 4F 22");
+        expect(hex).toBe("");
+    });
+    it("should compute LSB and MSB for labels", () => {
+        const result = assemble(lsbMsb);
+        const hex = byteArrayToHexString(result);
+        expect(hex).toBe("A2 F2 A0 80 A2 08 A0 06 00");
     });
 });

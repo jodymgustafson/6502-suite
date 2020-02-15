@@ -1,4 +1,4 @@
-import { toSignedByte, wordToBytes, parseByteList, byteArrayToHexString, isWord, isByte, isSignedByte, fromSignedByte, hexStringToByteArray } from "../util";
+import { toSignedByte, wordToBytes, parseByteList, byteArrayToHexString, isWord, isByte, isSignedByte, fromSignedByte, hexStringToByteArray, getLSB, getMSB } from "../util";
 
 describe("When check is word", () => {
     it("should be true", () => {
@@ -116,5 +116,19 @@ describe("When convert string to byte list", () => {
     it("should convert string to array of bytes", () => {
         const result = parseByteList("$A9, %01, $8D, 2");
         expect(result).toEqual([0xA9, 0x01, 0x8D, 0x02]);
+    });
+});
+
+describe("When get LSB", () => {
+    it("should get lower byte of a word", () => {
+        const result = getLSB(0xA9F3);
+        expect(result).toEqual(0xF3);
+    });
+});
+
+describe("When get MSB", () => {
+    it("should get upper byte of a word", () => {
+        const result = getMSB(0xA9F3);
+        expect(result).toEqual(0xA9);
     });
 });

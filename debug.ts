@@ -2,22 +2,30 @@ import { Emulator, assemble, disassemble, util } from "./index";
 import { dasmToString } from "./util";
 
 const code1 = `
-define max_x $FF;
-define max_y $AA;
-  LDY #$00
-start:
-  LDX #$00
-start_x:
-  INX
-  CPX #max_x
-  BNE start_x
-  INY
-  CPY #max_y
-  BNE start
-  BRK
+*=$0600
+LDX #<data
+LDY #>data
 data:
-  DCB "Hello", "World", $23
-`;
+BRK
+`
+// `
+// ;comment
+// define max_x $FF;
+// define max_y $AA;
+//   LDY #$00
+// start:
+//   LDX #$00
+// start_x:
+//   INX
+//   CPX #max_x
+//   BNE start_x
+//   INY
+//   CPY #max_y
+//   BNE start
+//   BRK
+// data:
+//   DCB "Hello", "World", $23
+// `;
 
 // const data = "$0A, $1A, $2A, $3A, $4A".split(",").map(n => parseNumber(n.trim()) & 0xFF);
 // data.toString();

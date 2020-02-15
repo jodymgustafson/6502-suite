@@ -13,14 +13,17 @@ export function parseNumber(num: string): number
     }
 }
 
+/** Checks if a number fits in a byte */
 export function isByte(num: number): boolean {
     return num >=0 && num <= 0xFF;
 }
 
+/** Checks if a number fits in a signed byte */
 export function isSignedByte(num: number): boolean {
     return num >=-128 && num <= 127;
 }
 
+/** Checks if a number fits in a word */
 export function isWord(num: number): boolean {
     return num >=0 && num <= 0xFFFF;
 }
@@ -31,6 +34,16 @@ export function wordToBytes(word: number): number[] {
         word & 0x00FF,
         (word & 0xFF00) >> 8
     ];
+}
+
+/** Gets the least significant byte of a word */
+export function getLSB(word: number): number {
+    return word & 0xFF;
+}
+
+/** Gets the most significant byte of a word */
+export function getMSB(word: number): number {
+    return (word >> 8) & 0xFF;
 }
 
 /** Converts a number to a signed byte in two's complement format */

@@ -1,4 +1,4 @@
-import { parseNumber, wordToBytes, toSignedByte, isSignedByte, parseByteList } from "../util";
+import { parseNumber, wordToBytes, toSignedByte, isSignedByte, parseByteList, getLSB, getMSB } from "../util";
 import { OPCODES, OpCodeIndex } from "./opcodes";
 import * as addressing from "./addressing";
 import { AddressingInfo } from "./addressing";
@@ -25,8 +25,7 @@ export type MetaInstruction = {
  * @param code Lines of assembly code
  * @param baseAddr (optional) Address the code will start at
  */
-export function assemble(code: string, baseAddr = 0): number[]
-{
+export function assemble(code: string, baseAddr = 0): number[] {
     // First pass parses code into operations
     const instructions: MetaInstruction[] = parseLines(code.split("\n"), baseAddr);
     //console.log(lines);
@@ -86,12 +85,17 @@ function getInstructionBytes(instr: MetaInstruction,  instructions: MetaInstruct
     return bytes;
 }
 
-function resolveLabel(instr: MetaInstruction, lines: MetaInstruction[]): number
-{
+function resolveLabel(instr: MetaInstruction, lines: MetaInstruction[]): number {
     const label = instr.opLabel;
     const foundLabel = lines.find(l => l.operation === "LABEL" && l.opLabel === label);
     if (foundLabel) {
-        if (instr.byteCount === 2) {
+        if (instr.data === "<") {
+            return getLSB(foundLabel.address);
+        }
+        else if (instr.data === ">") {
+            return getMSB(foundLabel.address);
+        }
+        else if (instr.byteCount === 2) {
             // branch, compute offset as signed byte
             return getAddressOffset(instr.address, foundLabel.address);
         }
@@ -124,7 +128,8 @@ function parseLines(lines: string[], baseAddr: number): MetaInstruction[]
     let addr = baseAddr;
 
     for (let line of lines) {
-        line = removeComments(line);
+        line = removeComments(line).trim();
+        if (!line) continue;
 
         // if it's a label and there's code after the label, split into 2 lines
         const labelEnd = line.indexOf(":");
@@ -135,7 +140,6 @@ function parseLines(lines: string[], baseAddr: number): MetaInstruction[]
             line = line.slice(labelEnd + 1);
         }
 
-        line = line.trim().toUpperCase();
         if (line) {
             const parsed = parseLine(line, addr, defines);
             if (isSetAddress(parsed)) {
@@ -153,7 +157,7 @@ function parseLines(lines: string[], baseAddr: number): MetaInstruction[]
 
 function removeComments(line: string) {
     const commentStart = line.indexOf(";");
-    if (commentStart > 0) {
+    if (commentStart >= 0) {
         line = line.slice(0, commentStart);
     }
     return line;
@@ -171,14 +175,14 @@ function parseLine(line: string, addr: number, defines: any): MetaInstruction
 
     //console.log(tokens);
     const instr: MetaInstruction = {
-        operation: tokens[0],
-        operand: tokens[1],
+        operation: tokens[0].toUpperCase(),
+        operand: (tokens[1] || "").toUpperCase(),
         address: addr,
         byteCount: 0
     };
 
     if (isDCB(instr)) {
-        instr.data = parseDCBToBytes(instr.operand);
+        instr.data = parseDCBToBytes(tokens[1]);
         instr.byteCount = instr.data.length;
     }
     else if (isLabel(instr)) {
@@ -257,7 +261,13 @@ function setOpCode(instr: MetaInstruction): void
         instr.byteCount = 2;
     }
     else if (info = addressing.checkImmediate(instr.operand)) {
-        instr.opValue = info.value as number;
+        if (typeof info.value === "string") {
+            instr.opLabel = info.value;
+            instr.data = info.whichByte;
+        }
+        else {
+            instr.opValue = info.value;
+        }
         instr.opCode = opCodeGroup[OpCodeIndex.IMM];
         instr.byteCount = 2;
     }
@@ -268,10 +278,10 @@ function setOpCode(instr: MetaInstruction): void
     }
     else if (info = addressing.checkAbsolute(instr.operand)) {
         if (typeof info.value === "string") {
-            instr.opLabel = info.value as string;
+            instr.opLabel = info.value;
         }
         else {
-            instr.opValue = info.value as number;
+            instr.opValue = info.value;
         }
         instr.opCode = opCodeGroup[info.register === "X" ? OpCodeIndex.ABSX : info.register === "Y" ? OpCodeIndex.ABSY : OpCodeIndex.ABS];
         instr.byteCount = 3;

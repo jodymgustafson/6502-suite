@@ -14,21 +14,37 @@ describe("When checking non address mode", () => {
 });
 
 describe("When checking immediate addressing mode", () => {
-    it("should get immediate", () => {
+    it("should get immediate byte", () => {
         const result = checkImmediate("#$1A");
         expect(result).toBeDefined();
         expect(result.value).toBe(0x1A);
         expect(result.register).toBeUndefined();
     });
-    it("should fail when not immediate format", () => {
+    it("should get immediate with LSB label", () => {
+        const result = checkImmediate("#<label1");
+        expect(result).toBeDefined();
+        expect(result.value).toBe("label1");
+        expect(result.whichByte).toBe("<");
+        expect(result.register).toBeUndefined();
+    });
+    it("should get immediate with MSB label", () => {
+        const result = checkImmediate("#>label1");
+        expect(result).toBeDefined();
+        expect(result.value).toBe("label1");
+        expect(result.whichByte).toBe(">");
+        expect(result.register).toBeUndefined();
+    });
+    it("should be undefined when not immediate format", () => {
         const result = checkImmediate("$2B");
         expect(result).toBeUndefined();
     });
     it("should fail when not a byte", () => {
-        const result = checkImmediate("#-1");
-        expect(result).toBeUndefined();
-        const result2 = checkImmediate("#1234");
-        expect(result2).toBeUndefined();
+        expect(() => checkImmediate("#$100")).toThrowError("Immediate value must be a byte");
+        expect(() => checkImmediate("#$1234")).toThrowError("Immediate value must be a byte");
+    });
+    it("should fail when invalid format", () => {
+        expect(() => checkImmediate("#foo")).toThrowError("Invalid format for immediate value");
+        expect(() => checkImmediate("#-1")).toThrowError("Invalid format for immediate value");
     });
 });
 

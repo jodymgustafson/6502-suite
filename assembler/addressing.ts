@@ -1,9 +1,13 @@
-import { parseNumber, isByte, isWord, toSignedByte } from "../util";
+import { parseNumber, isByte, isWord, toSignedByte, getLSB, getMSB } from "../util";
+
+const LSB_MOD = "<";
+const MSB_MOD = ">";
 
 export type RegisterType = ""|"X"|"Y";
 export type AddressingInfo = {
     value: number|string,
-    register?: RegisterType
+    register?: RegisterType,
+    whichByte?: "<"|">"
 }
 
 /** Checks if the operand doesn't use an address */
@@ -14,24 +18,46 @@ export function checkNonAddress(op: string): AddressingInfo {
 
 /** Checks if the operand is an immediate value */
 export function checkImmediate(op: string): AddressingInfo {
-    // format: #byte
-    const match = /^#([$%]?[\dA-F]{1,3})$/.exec(op);
+    if (op[0] !== "#") {
+        return undefined;
+    }
+    
+    // format: #byte | #[<|>]word
+    const match = /^#([<>]?)([$%]?[\dA-F]+)$/.exec(op);
     if (match) {
-        const v = parseNumber(match[1]);
-        if (isByte(v)) {
-            return {
-                value: v
+        const whichByte = match[1];
+        let v = parseNumber(match[2]);
+        if (whichByte) {
+            if (!isWord(v)) {
+                throw new Error("Immediate value must be a word when using byte modifier");
             }
+            v = (whichByte === LSB_MOD ? getLSB(v) : getMSB(v));
+        }
+        if (!isByte(v)) {
+            throw new Error("Immediate value must be a byte");
+        }
+        return {
+            value: v
+        };
+    }
+    else {
+        // format: #[<|>]label
+        const match = /^#([<>])([_a-zA-Z]\w+)$/.exec(op);
+        if (match) {
+            return {
+                whichByte: match[1] as any,
+                value: match[2]
+            };
         }
     }
 
-    return undefined;
+    throw new Error("Invalid format for immediate value");
 }
 
 /** Checks if the operand is a zero page value */
 export function checkZeroPage(op: string): AddressingInfo {
     // format: byte[,X|Y]
-    const match = /^([$%]?[\dA-F]{1,3})\s*(,\s*([XY]?))?$/.exec(op);
+    const match = /^([$%]?[\dA-F]+)\s*(,\s*([XY]?))?$/.exec(op);
     if (match) {
         const v = parseNumber(match[1]);
         if (isByte(v)) {
@@ -57,7 +83,7 @@ export function checkAbsolute(op: string): AddressingInfo {
     }
     else {
         // format: word[,X|Y]
-        const matchAddr = /^([$%]?[\dA-F]{1,5})\s*(,\s*([XY]?))?$/.exec(op);
+        const matchAddr = /^([$%]?[\dA-F]+)\s*(,\s*([XY]?))?$/.exec(op);
         if (matchAddr) {
             const v = parseNumber(matchAddr[1]);
             if (isWord(v)) {
@@ -75,8 +101,8 @@ export function checkAbsolute(op: string): AddressingInfo {
 /** Checks if the operand is an indirection */
 export function checkIndirect(op: string): AddressingInfo {
     // format: (word[,X|Y]) | (word)[,X|Y]
-    const match = /^\(([$%]?[\dA-F]{1,5})\s*(,\s*([XY]?))?\)$/.exec(op) ||
-                  /^\(([$%]?[\dA-F]{1,5})\)\s*(,\s*([XY]?))?$/.exec(op)
+    const match = /^\(([$%]?[\dA-F]+)\s*(,\s*([XY]?))?\)$/.exec(op) ||
+                  /^\(([$%]?[\dA-F]+)\)\s*(,\s*([XY]?))?$/.exec(op)
     if (match) {
         const v = parseNumber(match[1]);
         if (isWord(v)) {
@@ -93,7 +119,7 @@ export function checkIndirect(op: string): AddressingInfo {
 /** Checks if the operand is a valid branch label or offset */
 export function checkBranch(op: string): AddressingInfo {
     // format: label|signed-byte
-    const match = /^([a-zA-Z]+\w*|[$%]?[\dA-F]{1,5})$/.test(op);
+    const match = /^([a-zA-Z]+\w*|[$%]?[\dA-F]+)$/.test(op);
     if (match) {
         let num = parseNumber(op);
         if (!isFinite(num)) {
