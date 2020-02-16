@@ -2,10 +2,9 @@ import { Emulator, assemble, disassemble, util } from "./index";
 import { dasmToString } from "./util";
 
 const code1 = `
-*=$0600
-LDX #<data
-LDY #>data
-data:
+define scrn_mem $0080
+LDX test
+test:
 BRK
 `
 // `

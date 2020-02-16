@@ -1,6 +1,6 @@
 {
   "name": "6502-suite",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Assembler, disassember and emulator for 6502 CPU",
   "main": "index.js",
   "types": "index.d.ts",

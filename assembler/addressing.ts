@@ -100,9 +100,9 @@ export function checkAbsolute(op: string): AddressingInfo {
 
 /** Checks if the operand is an indirection */
 export function checkIndirect(op: string): AddressingInfo {
-    // format: (word[,X|Y]) | (word)[,X|Y]
-    const match = /^\(([$%]?[\dA-F]+)\s*(,\s*([XY]?))?\)$/.exec(op) ||
-                  /^\(([$%]?[\dA-F]+)\)\s*(,\s*([XY]?))?$/.exec(op)
+    // format: (word[,X]) | (word)[,Y]
+    const match = /^\(([$%]?[\dA-F]+)\s*(,\s*([X]?))?\)$/.exec(op) ||
+                  /^\(([$%]?[\dA-F]+)\)\s*(,\s*([Y]?))?$/.exec(op)
     if (match) {
         const v = parseNumber(match[1]);
         if (isWord(v)) {

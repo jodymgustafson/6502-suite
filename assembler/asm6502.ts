@@ -296,7 +296,7 @@ function setOpCode(instr: MetaInstruction): void
     }
 
     if (instr.opCode === null) {
-        throw new Error("Error setting opCode: " + JSON.stringify(instr));
+        throw new Error(`Error getting operation code for: ${instr.operation} ${instr.operand}. Make sure this is a valid instruction.`);
     }
 }
 

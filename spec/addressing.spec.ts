@@ -134,7 +134,7 @@ describe("When checking indirect addressing mode", () => {
         expect(result.register).toBe("X");
     });
     it("should get indirect with Y register", () => {
-        const result = checkIndirect("($0100),Y");
+        const result = checkIndirect("($0100), Y");
         expect(result).toBeDefined();
         expect(result.value).toBe(0x0100);
         expect(result.register).toBe("Y");
@@ -144,9 +144,13 @@ describe("When checking indirect addressing mode", () => {
         expect(result).toBeUndefined();
         const result2 = checkIndirect("$002B,X");
         expect(result2).toBeUndefined();
+        const result3 = checkIndirect("$(002B),X");
+        expect(result3).toBeUndefined();
+        const result4 = checkIndirect("$(002B,Y)");
+        expect(result4).toBeUndefined();
     });
     it("should fail when not a word", () => {
-        const result = checkIndirect("(-1, Y)");
+        const result = checkIndirect("(-1, X)");
         expect(result).toBeUndefined();
         const result2 = checkIndirect("(0xFFFF1)");
         expect(result2).toBeUndefined();
