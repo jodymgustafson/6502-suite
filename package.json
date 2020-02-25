@@ -1,6 +1,6 @@
 {
   "name": "6502-suite",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Assembler, disassember and emulator for 6502 CPU",
   "main": "index.js",
   "types": "index.d.ts",
@@ -22,7 +22,7 @@
   "license": "MIT",
   "devDependencies": {
     "@types/jasmine": "^3.5.1",
-    "@types/node": "^13.1.8",
+    "@types/node": "^13.7.4",
     "jasmine": "^3.5.0"
   },
   "dependencies": {}

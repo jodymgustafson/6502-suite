@@ -99,7 +99,7 @@ const code10 = `
     STA $0200`;
 
 const code11 = `
-*=$0600
+ORG $0600
     JSR init
     JSR loop
     JSR end
@@ -144,7 +144,7 @@ const allComments =
 `;
 
 const lsbMsb = 
-`*=$0600
+`org $0600
 define print1 $80F2
   LDX #<print1
   LDY #>print1

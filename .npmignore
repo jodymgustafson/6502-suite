@@ -4,6 +4,6 @@ tsconfig.json
 !**/*.d.ts
 /.git
 /spec
+/test
 /.vscode
-debug.*
 *.tgz

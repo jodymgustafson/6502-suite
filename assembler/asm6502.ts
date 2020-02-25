@@ -163,11 +163,12 @@ function removeComments(line: string) {
     return line;
 }
 
-function parseLine(line: string, addr: number, defines: any): MetaInstruction
-{
+function parseLine(line: string, addr: number, defines: any): MetaInstruction {
     //console.log(line);
-    if (line.startsWith("*=")) {
-        return parseBase(line);
+    
+    const setAddr = parseSetAddress(line);
+    if (setAddr) {
+        return setAddr;
     }
 
     // format: operation [operand]
@@ -310,17 +311,20 @@ function getOpCodeGroup(operation: string): number[]
     throw new Error("Invalid operation: " + operation);
 }
 
-function parseBase(line: string): MetaInstruction
+function parseSetAddress(line: string): MetaInstruction
 {
-    // get the value after *=, that will be the new address
-    const base = line.slice(2).trim();
-    //console.log("base", base);
-    return {
-        operation: "*=",
-        operand: base,
-        address: parseNumber(base),
-        byteCount: 0
-    };
+    const match = /^(\*\=)|(org\s+)|(ORG\s+)/.exec(line);
+    if (match) {
+        // get the value after *= or ORG, that will be the new address
+        const address = (match[1] ? line.slice(2) : line.slice(3)).trim();
+        //console.log("base", base);
+        return {
+            operation: "*=",
+            operand: address,
+            address: parseNumber(address),
+            byteCount: 0
+        };
+    }
 }
 
 function parseDCBToBytes(operand: string): number[] {

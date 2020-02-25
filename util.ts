@@ -1,5 +1,9 @@
 import { DisassembledInstruction } from "./disassembler/dasm6502";
 
+/**
+ * Parses a number to an integer
+ * @param num String representation of a number. If prefixed with $ assumes hex, % assumes binary, otherwise decimal.
+ */
 export function parseNumber(num: string): number
 {
     if (num[0] === "$") {

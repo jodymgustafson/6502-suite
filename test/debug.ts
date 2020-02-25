@@ -1,43 +1,18 @@
-import { Emulator, assemble, disassemble, util } from "./index";
-import { dasmToString } from "./util";
+import { Emulator, assemble, disassemble, util } from "../index";
+import { dasmToString } from "../util";
+import * as fs from "fs";
 
-const code1 = `
-define scrn_mem $0080
-LDX test
-test:
-BRK
-`
-// `
-// ;comment
-// define max_x $FF;
-// define max_y $AA;
-//   LDY #$00
-// start:
-//   LDX #$00
-// start_x:
-//   INX
-//   CPX #max_x
-//   BNE start_x
-//   INY
-//   CPY #max_y
-//   BNE start
-//   BRK
-// data:
-//   DCB "Hello", "World", $23
-// `;
+const code = fs.readFileSync("./test/test.asm", "utf8");
 
 // const data = "$0A, $1A, $2A, $3A, $4A".split(",").map(n => parseNumber(n.trim()) & 0xFF);
 // data.toString();
 
 const emu = new Emulator();
-let bytes = assemble(code1);
+let bytes = assemble(code);
 console.log(util.byteArrayToHexString(bytes));
 
 const dasm = disassemble(bytes);
 console.log(dasmToString(...dasm));
-
-bytes = assemble(code1);
-console.log(util.byteArrayToHexString(bytes));
 
 emu.load(bytes);
 //emu.onStep(state => console.log(emu.totalCycles,emu.registers.x));
