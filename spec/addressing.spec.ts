@@ -149,7 +149,7 @@ describe("When checking indirect addressing mode", () => {
         const result4 = checkIndirect("$(002B,Y)");
         expect(result4).toBeUndefined();
     });
-    it("should fail when value too large for indirect with X register", () => {
+    it("should fail when value too large for indirect with register", () => {
         const result = checkIndirect("($2345,X)");
         expect(result).toBeUndefined();
         const result2 = checkIndirect("($0100),Y");
