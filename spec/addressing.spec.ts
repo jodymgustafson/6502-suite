@@ -128,15 +128,15 @@ describe("When checking indirect addressing mode", () => {
         expect(result.register).toBeUndefined();
     });
     it("should get indirect with X register", () => {
-        const result = checkIndirect("(2345,X)");
+        const result = checkIndirect("(23,X)");
         expect(result).toBeDefined();
-        expect(result.value).toBe(2345);
+        expect(result.value).toBe(23);
         expect(result.register).toBe("X");
     });
     it("should get indirect with Y register", () => {
-        const result = checkIndirect("($0100), Y");
+        const result = checkIndirect("($10), Y");
         expect(result).toBeDefined();
-        expect(result.value).toBe(0x0100);
+        expect(result.value).toBe(0x10);
         expect(result.register).toBe("Y");
     });
     it("should fail when not indirect format", () => {
@@ -148,6 +148,12 @@ describe("When checking indirect addressing mode", () => {
         expect(result3).toBeUndefined();
         const result4 = checkIndirect("$(002B,Y)");
         expect(result4).toBeUndefined();
+    });
+    it("should fail when value too large for indirect with X register", () => {
+        const result = checkIndirect("($2345,X)");
+        expect(result).toBeUndefined();
+        const result2 = checkIndirect("($0100),Y");
+        expect(result2).toBeUndefined();
     });
     it("should fail when not a word", () => {
         const result = checkIndirect("(-1, X)");

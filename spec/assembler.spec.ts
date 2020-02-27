@@ -154,6 +154,11 @@ data:
   BRK
 `;
 
+const indirectIndexed = 
+`define str_lsb $0260
+LDA (str_lsb),Y        ; value too large
+`;
+
 describe("When assembling code", () => {
     it("should parse code1", () => {
         const result = assemble(code1);
@@ -229,5 +234,8 @@ describe("When assembling code", () => {
         const result = assemble(lsbMsb);
         const hex = byteArrayToHexString(result);
         expect(hex).toBe("A2 F2 A0 80 A2 08 A0 06 00");
+    });
+    it("should error if indexed indirect address", () => {
+        expect(() => assemble(indirectIndexed)).toThrowError("Invalid instruction: LDA ($0260),Y");
     });
 });

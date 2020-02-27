@@ -293,7 +293,7 @@ function setOpCode(instr: MetaInstruction): void
         instr.byteCount = (info.register === "X" || info.register === "Y") ? 2 : 3;
     }
     else {
-        throw new Error("Unhandled operation: " + JSON.stringify(instr));
+        throw new Error(`Invalid instruction: ${instr.operation} ${instr.operand}`);
     }
 
     if (instr.opCode === null) {

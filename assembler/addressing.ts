@@ -64,7 +64,7 @@ export function checkZeroPage(op: string): AddressingInfo {
             return {
                 value: v,
                 register: match[3] as RegisterType
-            }
+            };
         }
     }
 
@@ -79,7 +79,7 @@ export function checkAbsolute(op: string): AddressingInfo {
         return {
             value: matchLabel[1],
             register: matchLabel[3] as RegisterType
-        }
+        };
     }
     else {
         // format: word[,X|Y]
@@ -90,7 +90,7 @@ export function checkAbsolute(op: string): AddressingInfo {
                 return {
                     value: v,
                     register: matchAddr[3] as RegisterType
-                }
+                };
             }
         }
     }
@@ -98,18 +98,26 @@ export function checkAbsolute(op: string): AddressingInfo {
     return undefined;
 }
 
-/** Checks if the operand is an indirection */
+/** Checks if the operand is an indirection, with or without index */
 export function checkIndirect(op: string): AddressingInfo {
     // format: (word[,X]) | (word)[,Y]
     const match = /^\(([$%]?[\dA-F]+)\s*(,\s*([X]?))?\)$/.exec(op) ||
                   /^\(([$%]?[\dA-F]+)\)\s*(,\s*([Y]?))?$/.exec(op)
     if (match) {
+        const register = match[3] as RegisterType;
         const v = parseNumber(match[1]);
-        if (isWord(v)) {
-            return {
-                value: v,
-                register: match[3] as RegisterType
+        if (register) {
+            if (isByte(v)) {
+                return {
+                    value: v,
+                    register: register
+                };
             }
+        }
+        else if (isWord(v)) {
+            return {
+                value: v
+            };
         }
     }
 
