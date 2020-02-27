@@ -159,6 +159,19 @@ const indirectIndexed =
 LDA (str_lsb),Y        ; value too large
 `;
 
+const missingLabel = 
+`define str_lsb $0260
+define str_msb $0261
+LDA (str_foo),Y        ; invalid label
+`;
+
+const invalidOpcode = 
+`define str_lsb $0260
+define str_msb $0261
+FOO (str_lsb),Y        ; invalid opcode
+BRK
+`;
+
 describe("When assembling code", () => {
     it("should parse code1", () => {
         const result = assemble(code1);
@@ -236,6 +249,12 @@ describe("When assembling code", () => {
         expect(hex).toBe("A2 F2 A0 80 A2 08 A0 06 00");
     });
     it("should error if indexed indirect address", () => {
-        expect(() => assemble(indirectIndexed)).toThrowError("Invalid instruction: LDA ($0260),Y");
+        expect(() => assemble(indirectIndexed)).toThrowError("[Line 2] Invalid instruction: LDA ($0260),Y");
+    });
+    it("should error if missing label", () => {
+        expect(() => assemble(missingLabel)).toThrowError("[Line 3] Invalid instruction: LDA (STR_FOO),Y");
+    });
+    it("should error if invalid opcode", () => {
+        expect(() => assemble(invalidOpcode)).toThrowError("[Line 3] Invalid operation: FOO");
     });
 });

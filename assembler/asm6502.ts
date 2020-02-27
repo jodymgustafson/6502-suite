@@ -4,20 +4,28 @@ import * as addressing from "./addressing";
 import { AddressingInfo } from "./addressing";
 
 export type MetaInstruction = {
-    operation: string,
-    operand: string,
+    operation: string;
+    operand: string;
     /** address of the next byte after this operation */
-    address: number,
+    address: number;
     /** number of bytes for the operation */
-    byteCount: number,
+    byteCount: number;
+    /** original line number in source */
+    lineNumber: number;
     /** operation code */
-    opCode?: number,
+    opCode?: number;
     /** value of the operand */
-    opValue?: number,
+    opValue?: number;
     /** set if operation references a label */
-    opLabel?: string,
+    opLabel?: string;
     /** any other data */
-    data?: any
+    data?: any;
+}
+
+class AssemblyError extends Error {
+    constructor(public instr: MetaInstruction, message: string) {
+        super(`[Line ${instr.lineNumber}] ${message}`);
+    }
 }
 
 /**
@@ -56,7 +64,7 @@ function parseInstructions(instructions: MetaInstruction[]) {
             // nothing
         }
         else {
-            throw new Error("Invalid instruction: " + JSON.stringify(i));
+            throw new AssemblyError(i, "Invalid instruction: " + JSON.stringify(i));
         }
     }
 
@@ -97,14 +105,18 @@ function resolveLabel(instr: MetaInstruction, lines: MetaInstruction[]): number 
         }
         else if (instr.byteCount === 2) {
             // branch, compute offset as signed byte
-            return getAddressOffset(instr.address, foundLabel.address);
+            const offset = getAddressOffset(instr.address, foundLabel.address);
+            if (!isFinite(offset)) {
+                throw new AssemblyError(instr, "Label must be within 127 bytes: " + offset);
+            }
+            return offset;
         }
         else {
             // jump
             return foundLabel.address;
         }
     }
-    throw new Error("Invalid label: " + label);
+    throw new AssemblyError(instr, "Invalid label: " + label);
 }
 
 /**
@@ -116,7 +128,7 @@ function getAddressOffset(from: number, to: number): number {
     // 
     const offset = to - from;
     if (!isSignedByte(offset)) {
-        throw new Error("Label must be within 127 bytes: " + offset);
+        return Number.NaN;
     }
     return toSignedByte(offset);
 }
@@ -127,21 +139,23 @@ function parseLines(lines: string[], baseAddr: number): MetaInstruction[]
     const defines = {};
     let addr = baseAddr;
 
-    for (let line of lines) {
-        line = removeComments(line).trim();
+    for (let i = 0; i < lines.length; i++) {
+        let line = removeComments(lines[i]).trim();
         if (!line) continue;
+
+        const lineNumber = i + 1;
 
         // if it's a label and there's code after the label, split into 2 lines
         const labelEnd = line.indexOf(":");
         if (labelEnd >= 0 && labelEnd < line.length) {
             // parse the label and add it
-            instructions.push(parseLine(line.slice(0, labelEnd + 1).trim(), addr, defines));
+            instructions.push(parseLine(line.slice(0, labelEnd + 1).trim(), addr, defines, lineNumber));
             // get the code after the label
             line = line.slice(labelEnd + 1);
         }
 
         if (line) {
-            const parsed = parseLine(line, addr, defines);
+            const parsed = parseLine(line, addr, defines, lineNumber);
             if (isSetAddress(parsed)) {
                 addr = parsed.address;
             }
@@ -163,10 +177,10 @@ function removeComments(line: string) {
     return line;
 }
 
-function parseLine(line: string, addr: number, defines: any): MetaInstruction {
+function parseLine(line: string, addr: number, defines: any, lineNumber: number): MetaInstruction {
     //console.log(line);
     
-    const setAddr = parseSetAddress(line);
+    const setAddr = parseSetAddress(line, lineNumber);
     if (setAddr) {
         return setAddr;
     }
@@ -179,7 +193,8 @@ function parseLine(line: string, addr: number, defines: any): MetaInstruction {
         operation: tokens[0].toUpperCase(),
         operand: (tokens[1] || "").toUpperCase(),
         address: addr,
-        byteCount: 0
+        byteCount: 0,
+        lineNumber: lineNumber
     };
 
     if (isDCB(instr)) {
@@ -245,6 +260,9 @@ function replaceDefines(operand: string, defines: any): string {
 function setOpCode(instr: MetaInstruction): void
 {
     const opCodeGroup = getOpCodeGroup(instr.operation);
+    if (!opCodeGroup) {
+        throw new AssemblyError(instr, "Invalid operation: " + instr.operation);
+    }
     
     let info: AddressingInfo;
     if (info = addressing.checkNonAddress(instr.operand)) {
@@ -293,22 +311,17 @@ function setOpCode(instr: MetaInstruction): void
         instr.byteCount = (info.register === "X" || info.register === "Y") ? 2 : 3;
     }
     else {
-        throw new Error(`Invalid instruction: ${instr.operation} ${instr.operand}`);
+        throw new AssemblyError(instr, `Invalid instruction: ${instr.operation} ${instr.operand}`);
     }
 
     if (instr.opCode === null) {
-        throw new Error(`Error getting operation code for: ${instr.operation} ${instr.operand}. Make sure this is a valid instruction.`);
+        throw new AssemblyError(instr, `Error getting operation code for: ${instr.operation} ${instr.operand}. Make sure this is a valid instruction.`);
     }
 }
 
 function getOpCodeGroup(operation: string): number[]
 {
-    const opCodeGroup = OPCODES[operation] as number[];
-    if (opCodeGroup) {
-        return opCodeGroup;
-    }
-
-    throw new Error("Invalid operation: " + operation);
+    return OPCODES[operation] as number[];
 }
 
 /**
@@ -316,7 +329,7 @@ function getOpCodeGroup(operation: string): number[]
  * @param line Line to parse
  * @returns Undefined if it's not a set address directive
  */
-function parseSetAddress(line: string): MetaInstruction
+function parseSetAddress(line: string, lineNumber: number): MetaInstruction
 {
     const match = /^(\*\=)|(ORG\s+)/i.exec(line);
     if (match) {
@@ -327,7 +340,8 @@ function parseSetAddress(line: string): MetaInstruction
             operation: "*=",
             operand: address,
             address: parseNumber(address),
-            byteCount: 0
+            byteCount: 0,
+            lineNumber
         };
     }
 }
