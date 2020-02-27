@@ -311,9 +311,14 @@ function getOpCodeGroup(operation: string): number[]
     throw new Error("Invalid operation: " + operation);
 }
 
+/**
+ * Looks for a *= or ORG directive and return a set address instruction if so
+ * @param line Line to parse
+ * @returns Undefined if it's not a set address directive
+ */
 function parseSetAddress(line: string): MetaInstruction
 {
-    const match = /^(\*\=)|(org\s+)|(ORG\s+)/.exec(line);
+    const match = /^(\*\=)|(ORG\s+)/i.exec(line);
     if (match) {
         // get the value after *= or ORG, that will be the new address
         const address = (match[1] ? line.slice(2) : line.slice(3)).trim();
